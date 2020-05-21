@@ -10,15 +10,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-public class Main extends Plugin
-{
+public class Main extends Plugin {
 
-    //public static final String API_ENDPOINT = "https://minecraftcapes.co.uk/profile/%s/auth";
-    public static final String API_ENDPOINT = "http://192.168.129.3/profile/%s/auth";
+    public static String AUTH_ENDPOINT;
     public static String API_KEY;
+    public static Main instance;
 
     @Override
     public void onEnable() {
+        //Set plugin instance
+        Main.instance = this;
+
         try {
             //Makes plugin folders if they don't exist
             File pluginFolder = this.getDataFolder();
@@ -35,11 +37,12 @@ public class Main extends Plugin
 
             //Loads config
             Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
+            this.AUTH_ENDPOINT = configuration.getString("AUTH_ENDPOINT");
             this.API_KEY = configuration.getString("API_KEY");
         } catch(IOException e) {
             e.printStackTrace();
         }
 
-        getProxy().getPluginManager().registerListener(this, new CodeGetter());
+        getProxy().getPluginManager().registerListener(this, new PlayerConnectionHandler());
     }
 }
