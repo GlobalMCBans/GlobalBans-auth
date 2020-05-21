@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<project name="AutoExport" default="CreateJar">
+    <property name="plugins" location="run/plugins"  />
+
+    <target name="CreateJar" description="Create a jar for the project">
+        <mkdir dir="target"></mkdir>
+        <jar destfile="${plugins}/MCCapes_Auth_Dev.jar">
+            <fileset dir="target/classes/"></fileset>
+        </jar>
+    </target>
+</project>

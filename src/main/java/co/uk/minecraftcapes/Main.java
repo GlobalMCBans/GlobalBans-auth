@@ -7,30 +7,39 @@ import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 
 public class Main extends Plugin
 {
-    String API_KEY;
 
-    public void onEnable()
-    {
-        getLogger().info("Plugin Loaded");
+    //public static final String API_ENDPOINT = "https://minecraftcapes.co.uk/profile/%s/auth";
+    public static final String API_ENDPOINT = "http://192.168.129.3/profile/%s/auth";
+    public static String API_KEY;
 
-        File file = new File(getDataFolder(), "config.yml");
-        if (!file.exists()) {
-            System.out.println("No config file found at: " + file.toString());
-        }
-        try
-        {
-            Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
+    @Override
+    public void onEnable() {
+        try {
+            //Makes plugin folders if they don't exist
+            File pluginFolder = this.getDataFolder();
+            if(!pluginFolder.exists()) {
+                pluginFolder.mkdir();
+            }
+
+            //Makes config file if it doesn't exist
+            File configFile = new File(getDataFolder(), "config.yml");
+            if (!configFile.exists()) {
+                InputStream in = this.getResourceAsStream("config.yml");
+                Files.copy(in, configFile.toPath());
+            }
+
+            //Loads config
+            Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
             this.API_KEY = configuration.getString("API_KEY");
+        } catch(IOException e) {
+            e.printStackTrace();
         }
-        catch (IOException localIOException) {}
-        getProxy().getPluginManager().registerListener(this, new CodeGetter(this.API_KEY));
-    }
 
-    public void onDisable()
-    {
-        getLogger().info("Plugin Unloaded");
+        getProxy().getPluginManager().registerListener(this, new CodeGetter());
     }
 }
