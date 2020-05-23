@@ -12,10 +12,15 @@ import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PlayerConnectionHandler implements Listener {
 
@@ -25,16 +30,13 @@ public class PlayerConnectionHandler implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(LoginEvent event) {
-        PendingConnection player = event.getConnection();
-
-        String uuid = player.getUniqueId().toString().replace("-", "");
-        String username = player.getName();
+        PendingConnection connection = event.getConnection();
 
         event.registerIntent(Main.instance);
         ProxyServer.getInstance().getScheduler().runAsync(Main.instance, new Runnable() {
             @Override
             public void run() {
-                event.setCancelReason(getResponse(uuid, username));
+                event.setCancelReason(getResponse(connection));
                 event.setCancelled(true);
                 event.completeIntent(Main.instance);
             }
@@ -43,19 +45,23 @@ public class PlayerConnectionHandler implements Listener {
 
     /**
      * Handles API response as a message for the player
-     * @param uuid Players UUID
-     * @param username Players username
+     * @param connection PendingConnection of player
      * @return
      */
-    private BaseComponent[] getResponse(String uuid, String username) {
+    private BaseComponent[] getResponse(PendingConnection connection) {
         ComponentBuilder response = new ComponentBuilder("===============================\n\n").color(ChatColor.DARK_GRAY).strikethrough(true).bold(true);
-        JsonObject responseJson = getApiResponse(uuid, username).getAsJsonObject();
+        JsonObject responseJson = getApiResponse(connection).getAsJsonObject();
 
         if(responseJson != null && responseJson.get("success") != null && responseJson.get("success").getAsBoolean()) {
-            response = response.append("Your authorization code is\n").reset();
-            response = response.append("\u00BB ").color(ChatColor.RED).bold(true);
-            response = response.append(responseJson.get("code").getAsString()).reset();
-            response = response.append(" \u00AB").color(ChatColor.RED).bold(true);
+            if(responseJson.get("registered").getAsBoolean()) {
+                response = response.append("Your authorization code is\n").reset();
+                response = response.append("\u00BB ").color(ChatColor.RED).bold(true);
+                response = response.append(responseJson.get("code").getAsString()).reset();
+                response = response.append(" \u00AB").color(ChatColor.RED).bold(true);
+            } else {
+                response = response.append("Confirmed!\n").reset();
+                response = response.append("Please return to the web page!").reset();
+            }
         } else {
             //todo needs changing
             response = response.append("Something went wrong\nPlease reconnect to try again").reset().color(ChatColor.RED).bold(true);
@@ -71,20 +77,21 @@ public class PlayerConnectionHandler implements Listener {
 
     /**
      * Sends and receives the API response from the server
-     * @param uuid Players UUID
-     * @param username Players username
+     * @param connection PendingConnection of player
      * @return
      */
-    private JsonElement getApiResponse(String uuid, String username) {
+    private JsonElement getApiResponse(PendingConnection connection) {
         try {
             HttpClient client = HttpClient.newHttpClient();
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(getApiEndpoint(uuid, username)))
-                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .uri(Main.AUTH_ENDPOINT)
+                    .POST(getRequestData(connection))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
             JsonElement responseJson = new JsonParser().parse(response.body());
             return responseJson;
         } catch(Exception e) {
@@ -93,17 +100,30 @@ public class PlayerConnectionHandler implements Listener {
     }
 
     /**
-     * Gets the API endpoint for the player
-     * @param uuid Players UUID
-     * @param username Players username
+     * Gets the request data for the player
+     * @param connection PendingConnection of player
      * @return
      */
-    private String getApiEndpoint(String uuid, String username) {
-        return String.format(
-                Main.AUTH_ENDPOINT,
-                uuid,
-                Main.API_KEY,
-                username
-        );
+    private HttpRequest.BodyPublisher getRequestData(PendingConnection connection) {
+        String uuid = connection.getUniqueId().toString().replace("-", "");
+        String username = connection.getName();
+        String ipAddress = ((InetSocketAddress) connection.getSocketAddress()).getAddress().toString().replace("/", "");
+
+        Map<Object, Object> data = new HashMap<>();
+        data.put("key", Main.API_KEY);
+        data.put("uuid", uuid);
+        data.put("username", username);
+        data.put("ip", ipAddress);
+
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<Object, Object> entry : data.entrySet()) {
+            if (builder.length() > 0) {
+                builder.append("&");
+            }
+            builder.append(URLEncoder.encode(entry.getKey().toString(), StandardCharsets.UTF_8));
+            builder.append("=");
+            builder.append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8));
+        }
+        return HttpRequest.BodyPublishers.ofString(builder.toString());
     }
 }

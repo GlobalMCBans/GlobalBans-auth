@@ -1,2 +1,2 @@
-AUTH_ENDPOINT: https://minecraftcapes.co.uk/profile/%s/auth?key=%s&username=%s
+AUTH_ENDPOINT: https://minecraftcapes.co.uk/api/auth
 API_KEY:

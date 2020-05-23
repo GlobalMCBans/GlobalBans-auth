@@ -8,11 +8,12 @@ import net.md_5.bungee.config.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 
 public class Main extends Plugin {
 
-    public static String AUTH_ENDPOINT;
+    public static URI AUTH_ENDPOINT;
     public static String API_KEY;
     public static Main instance;
 
@@ -37,7 +38,7 @@ public class Main extends Plugin {
 
             //Loads config
             Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
-            this.AUTH_ENDPOINT = configuration.getString("AUTH_ENDPOINT");
+            this.AUTH_ENDPOINT = URI.create(configuration.getString("AUTH_ENDPOINT"));
             this.API_KEY = configuration.getString("API_KEY");
         } catch(IOException e) {
             e.printStackTrace();
