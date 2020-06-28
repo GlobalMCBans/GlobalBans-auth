@@ -1,4 +1,4 @@
-package co.uk.minecraftcapes;
+package net.minecraftcapes;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,8 +12,6 @@ import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -33,13 +31,10 @@ public class PlayerConnectionHandler implements Listener {
         PendingConnection connection = event.getConnection();
 
         event.registerIntent(Main.instance);
-        ProxyServer.getInstance().getScheduler().runAsync(Main.instance, new Runnable() {
-            @Override
-            public void run() {
-                event.setCancelReason(getResponse(connection));
-                event.setCancelled(true);
-                event.completeIntent(Main.instance);
-            }
+        ProxyServer.getInstance().getScheduler().runAsync(Main.instance, () -> {
+            event.setCancelReason(getResponse(connection));
+            event.setCancelled(true);
+            event.completeIntent(Main.instance);
         });
     }
 
@@ -53,21 +48,14 @@ public class PlayerConnectionHandler implements Listener {
         JsonObject responseJson = getApiResponse(connection).getAsJsonObject();
 
         if(responseJson != null && responseJson.get("success") != null && responseJson.get("success").getAsBoolean()) {
-            if(responseJson.get("registered").getAsBoolean()) {
-                response = response.append("Your authorization code is\n").reset();
-                response = response.append("\u00BB ").color(ChatColor.RED).bold(true);
-                response = response.append(responseJson.get("code").getAsString()).reset();
-                response = response.append(" \u00AB").color(ChatColor.RED).bold(true);
-            } else {
-                response = response.append("Confirmed!\n").reset();
-                response = response.append("Please return to the web page!").reset();
-            }
+            response = response.append("Your authorization code is\n").reset();
+            response = response.append("\u00BB ").color(ChatColor.RED).bold(true);
+            response = response.append(responseJson.get("code").getAsString()).reset();
+            response = response.append(" \u00AB").color(ChatColor.RED).bold(true);
         } else {
-            //todo needs changing
             response = response.append("Something went wrong\nPlease reconnect to try again").reset().color(ChatColor.RED).bold(true);
         }
 
-        //todo needs changing
         response = response.append("\n\n===============================\n").color(ChatColor.DARK_GRAY).strikethrough(true).bold(true);
         response = response.append("\nJoin our Minecraft Server").reset().color(ChatColor.AQUA);
         response = response.append("\n\u25A0").color(ChatColor.GREEN).append(" Play.CapeCraft.Net ").color(ChatColor.YELLOW).append("\u25A0").color(ChatColor.GREEN);
@@ -107,13 +95,11 @@ public class PlayerConnectionHandler implements Listener {
     private HttpRequest.BodyPublisher getRequestData(PendingConnection connection) {
         String uuid = connection.getUniqueId().toString().replace("-", "");
         String username = connection.getName();
-        String ipAddress = ((InetSocketAddress) connection.getSocketAddress()).getAddress().toString().replace("/", "");
 
         Map<Object, Object> data = new HashMap<>();
         data.put("key", Main.API_KEY);
         data.put("uuid", uuid);
         data.put("username", username);
-        data.put("ip", ipAddress);
 
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<Object, Object> entry : data.entrySet()) {

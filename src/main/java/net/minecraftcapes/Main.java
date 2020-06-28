@@ -1,4 +1,4 @@
-package co.uk.minecraftcapes;
+package net.minecraftcapes;
 
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
