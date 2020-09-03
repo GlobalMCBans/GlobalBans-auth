@@ -47,8 +47,6 @@ public class PlayerConnectionHandler implements Listener {
         ComponentBuilder response = new ComponentBuilder("===============================\n\n").color(ChatColor.DARK_GRAY).strikethrough(true).bold(true);
         JsonObject responseJson = getApiResponse(connection).getAsJsonObject();
 
-        System.out.println(responseJson);
-
         if(responseJson != null && responseJson.get("success") != null && responseJson.get("success").getAsBoolean()) {
             response = response.append("Your authorization code is\n").reset();
             response = response.append("\u00BB ").color(ChatColor.RED).bold(true);
