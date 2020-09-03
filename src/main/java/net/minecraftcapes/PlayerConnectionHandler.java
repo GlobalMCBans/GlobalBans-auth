@@ -47,13 +47,19 @@ public class PlayerConnectionHandler implements Listener {
         ComponentBuilder response = new ComponentBuilder("===============================\n\n").color(ChatColor.DARK_GRAY).strikethrough(true).bold(true);
         JsonObject responseJson = getApiResponse(connection).getAsJsonObject();
 
+        System.out.println(responseJson);
+
         if(responseJson != null && responseJson.get("success") != null && responseJson.get("success").getAsBoolean()) {
             response = response.append("Your authorization code is\n").reset();
             response = response.append("\u00BB ").color(ChatColor.RED).bold(true);
             response = response.append(responseJson.get("code").getAsString()).reset();
             response = response.append(" \u00AB").color(ChatColor.RED).bold(true);
         } else {
-            response = response.append("Something went wrong\nPlease reconnect to try again").reset().color(ChatColor.RED).bold(true);
+            if(responseJson != null && responseJson.get("blocked") != null && responseJson.get("blocked").getAsBoolean()) {
+                response = response.append("The specified account has been blocked for violating our terms of service.").reset().color(ChatColor.RED).bold(true);
+            } else {
+                response = response.append("Something went wrong\nPlease reconnect to try again").reset().color(ChatColor.RED).bold(true);
+            }
         }
 
         response = response.append("\n\n===============================\n").color(ChatColor.DARK_GRAY).strikethrough(true).bold(true);
