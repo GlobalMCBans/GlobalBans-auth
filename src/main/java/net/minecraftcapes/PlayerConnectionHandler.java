@@ -53,8 +53,8 @@ public class PlayerConnectionHandler implements Listener {
             response = response.append(responseJson.get("code").getAsString()).reset();
             response = response.append(" \u00AB").color(ChatColor.RED).bold(true);
         } else {
-            if(responseJson != null && responseJson.get("blocked") != null && responseJson.get("blocked").getAsBoolean()) {
-                response = response.append("The specified account has been blocked for violating our terms of service.").reset().color(ChatColor.RED).bold(true);
+            if(responseJson != null && responseJson.get("banned") != null && responseJson.get("banned").getAsBoolean()) {
+                response = response.append("The specified account has been banned for violating our terms of service.").reset().color(ChatColor.RED).bold(true);
             } else {
                 response = response.append("Something went wrong\nPlease reconnect to try again").reset().color(ChatColor.RED).bold(true);
             }
