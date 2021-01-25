@@ -29,13 +29,9 @@ public class PlayerConnectionHandler implements Listener {
     @EventHandler
     public void onPlayerJoin(LoginEvent event) {
         PendingConnection connection = event.getConnection();
-
-        event.registerIntent(Main.instance);
-        ProxyServer.getInstance().getScheduler().runAsync(Main.instance, () -> {
-            event.setCancelReason(getResponse(connection));
-            event.setCancelled(true);
-            event.completeIntent(Main.instance);
-        });
+        ProxyServer.getInstance().getLogger().info(String.format("[%s] [%s] Processing auth request", connection.getSocketAddress(), connection.getName()));
+        event.setCancelReason(getResponse(connection));
+        event.setCancelled(true);
     }
 
     /**
@@ -73,6 +69,7 @@ public class PlayerConnectionHandler implements Listener {
      * @return
      */
     private JsonElement getApiResponse(PendingConnection connection) {
+        ProxyServer.getInstance().getLogger().info(String.format("[%s] [%s] Processing api response", connection.getSocketAddress(), connection.getName()));
         try {
             HttpClient client = HttpClient.newHttpClient();
 
@@ -84,9 +81,12 @@ public class PlayerConnectionHandler implements Listener {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+            ProxyServer.getInstance().getLogger().info(response.body());
             JsonElement responseJson = new JsonParser().parse(response.body());
+            ProxyServer.getInstance().getLogger().info(String.format("[%s] [%s] Processed api response", connection.getSocketAddress(), connection.getName()));
             return responseJson;
         } catch(Exception e) {
+            ProxyServer.getInstance().getLogger().severe(String.format("[%s] [%s] Processing api response failed", connection.getSocketAddress(), connection.getName()));
             return new JsonParser().parse("{ success: false }");
         }
     }
