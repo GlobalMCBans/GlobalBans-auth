@@ -9,10 +9,18 @@ try {
     if (!fs.existsSync('.env')) {
         fs.copyFileSync('.env.example', '.env');
     }
-} catch(err) {
-    logger.severe("Could not read .env file");
+} catch (err) {
+    logger.error("Could not read .env file");
     process.exit();
 }
+
+//STDIN Reader
+const readline = require('readline');
+var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+});
 
 //Loads Libraries
 require('dotenv').config()
@@ -28,17 +36,16 @@ const server = mc.createServer({
     maxPlayers: 1,
     motd: process.env.MOTD,
     encryption: process.env.ENCRYPTION,
-    'online-mode': process.env.ONLINE_MODE,
-    version: '1.16.4'
+    'online-mode': process.env.ONLINE_MODE
 });
 logger.info("Started MinecraftCapes Auth on", process.env.SERVER_IP + ":" + process.env.SERVER_PORT);
 
 /**
  * Handle client connections
+ * Any error will result in a "failed to verify username"
  */
-server.on('login', function(client) {
-    logger.info(client.username, "is connected with version", client.version)
-
+server.on('login', function (client) {
+    logger.info(client.username, "requested auth code")
     client.end(
         "§8§l§m===============================\n\n" +
         `${getAuthCode(client.uuid)}` +
@@ -46,14 +53,38 @@ server.on('login', function(client) {
         "\n§bJoin our Minecraft Server" +
         "\n§a\u25A0 §ePlay.CapeCraft.Net §a\u25A0"
     );
-});
+})
 
+/**
+ * Get the auth code
+ * @param {UUID} uuid
+ */
 function getAuthCode(uuid) {
     let errorMessage = "§c§lSomething went wrong\nPlease reconnect to try again"
-    let blockedMessage = "§c§lThe specified account has been banned for violating our terms of service."
+    try {
+        let blockedMessage = "§c§lThe specified account has been banned for violating our terms of service."
 
-    let authCode = "123456"
-    let authMessage = `§fYour authorization code is\n§c§l\u00BB§f ${authCode} §c§l\u00AB`;
+        uuid = uuid.replace("-", "");
 
-    return authMessage;
+        let authCode = "123456"
+        let authMessage = `§fYour authorization code is\n§c§l\u00BB§f ${authCode} §c§l\u00AB`;
+
+        return authMessage;
+    } catch (error) {
+        logger.error(error);
+        return errorMessage;
+    }
 }
+
+/**
+ * Command handler
+ */
+rl.on('line', function (line) {
+    line = line.toLocaleLowerCase();
+    switch(line) {
+        case "stop":
+            logger.info("Stopping MinecraftCapes Auth...")
+            server.close()
+            process.exit();
+    }
+})
