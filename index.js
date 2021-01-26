@@ -29,15 +29,16 @@ const server = mc.createServer({
     motd: process.env.MOTD,
     encryption: process.env.ENCRYPTION,
     'online-mode': process.env.ONLINE_MODE,
+    version: '1.16.4'
 });
 logger.info("Started MinecraftCapes Auth on", process.env.SERVER_IP + ":" + process.env.SERVER_PORT);
 
 /**
  * Handle client connections
  */
-server.on('login', function (client) {
-    const mcData = require('minecraft-data')(client.version)
-    let loginPacket = mcData.loginPacket
+server.on('login', function(client) {
+    logger.info(client.username, "is connected with version", client.version)
+
     client.end(
         "§8§l§m===============================\n\n" +
         `${getAuthCode(client.uuid)}` +
@@ -50,8 +51,6 @@ server.on('login', function (client) {
 function getAuthCode(uuid) {
     let errorMessage = "§c§lSomething went wrong\nPlease reconnect to try again"
     let blockedMessage = "§c§lThe specified account has been banned for violating our terms of service."
-
-    uuid = uuid.replaceAll("-", "");
 
     let authCode = "123456"
     let authMessage = `§fYour authorization code is\n§c§l\u00BB§f ${authCode} §c§l\u00AB`;
