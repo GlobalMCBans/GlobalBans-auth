@@ -51,7 +51,7 @@ function startServer() {
      * Any error will result in a "failed to verify username"
      */
     server.on('login', client => {
-        logger.info(client.username, "requested an auth code")
+        logger.info(client.username, "is requesting an auth code")
 
         getAuthCode(client.uuid, client.username).then(res => {
             client.end(
@@ -61,6 +61,7 @@ function startServer() {
                 "\n§bJoin our Minecraft Server" +
                 "\n§a\u25A0 §ePlay.CapeCraft.Net §a\u25A0"
             );
+            logger.info(client.username, "has been served")
         });
     })
 }
