@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "form-data": "^3.0.0",
     "log4js": "^6.3.0",
     "minecraft-protocol": "^1.22.0"
   }

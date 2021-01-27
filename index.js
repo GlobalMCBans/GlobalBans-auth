@@ -23,53 +23,84 @@ var rl = readline.createInterface({
 });
 
 //Loads Libraries
+const fetch = require('node-fetch');
+const FormData = require('form-data');
 require('dotenv').config()
 const mc = require('minecraft-protocol');
 
 /**
  * Start the MC Server
  */
-logger.info("Starting MinecraftCapes Auth...");
-const server = mc.createServer({
-    host: process.env.SERVER_IP,
-    port: process.env.SERVER_PORT,
-    maxPlayers: 1,
-    motd: process.env.MOTD,
-    encryption: process.env.ENCRYPTION,
-    'online-mode': process.env.ONLINE_MODE
-});
-logger.info("Started MinecraftCapes Auth on", process.env.SERVER_IP + ":" + process.env.SERVER_PORT);
+var server;
+startServer();
+function startServer() {
+    logger.info("Starting MinecraftCapes Auth...");
+    server = mc.createServer({
+        host: process.env.SERVER_IP,
+        port: process.env.SERVER_PORT,
+        maxPlayers: 1,
+        motd: process.env.MOTD.replace(/&/g, '§'),
+        encryption: process.env.ENCRYPTION.toLowerCase() == "true",
+        'online-mode': process.env.ONLINE_MODE.toLowerCase() == "true",
+        favicon: process.env.FAVICON
+    });
+    logger.info("Started MinecraftCapes Auth on", process.env.SERVER_IP + ":" + process.env.SERVER_PORT);
 
-/**
- * Handle client connections
- * Any error will result in a "failed to verify username"
- */
-server.on('login', function (client) {
-    logger.info(client.username, "requested auth code")
-    client.end(
-        "§8§l§m===============================\n\n" +
-        `${getAuthCode(client.uuid)}` +
-        "\n\n§8§l§m===============================\n" +
-        "\n§bJoin our Minecraft Server" +
-        "\n§a\u25A0 §ePlay.CapeCraft.Net §a\u25A0"
-    );
-})
+    /**
+     * Handle client connections
+     * Any error will result in a "failed to verify username"
+     */
+    server.on('login', client => {
+        logger.info(client.username, "requested an auth code")
+
+        getAuthCode(client.uuid, client.username).then(res => {
+            client.end(
+                "§8§l§m===============================\n\n" +
+                `${res}` +
+                "\n\n§8§l§m===============================\n" +
+                "\n§bJoin our Minecraft Server" +
+                "\n§a\u25A0 §ePlay.CapeCraft.Net §a\u25A0"
+            );
+        });
+    })
+}
 
 /**
  * Get the auth code
- * @param {UUID} uuid
+ * @param {String} uuid
+ * @param {String} username
  */
-function getAuthCode(uuid) {
+async function getAuthCode(uuid, username) {
     let errorMessage = "§c§lSomething went wrong\nPlease reconnect to try again"
     try {
-        let blockedMessage = "§c§lThe specified account has been banned for violating our terms of service."
+        let blockedMessage = "§c§lYour account has been banned for violating our terms of service."
 
-        uuid = uuid.replace("-", "");
+        let formData = new FormData();
+        formData.append('key', process.env.API_KEY);
+        formData.append('uuid', uuid.replace(/-/g, ""));
+        formData.append('username', username);
 
-        let authCode = "123456"
-        let authMessage = `§fYour authorization code is\n§c§l\u00BB§f ${authCode} §c§l\u00AB`;
+        let response = await fetch(process.env.AUTH_ENDPOINT, {
+            method: 'POST',
+            body: formData,
+            headers: formData.getHeaders()
+        });
+        let data = await response.json();
 
-        return authMessage;
+        let authCode = null
+        if(data != null && data.success) {
+            authCode = data.code
+            let authMessage = `§fYour authorization code is\n§c§l\u00BB§f ${authCode} §c§l\u00AB`;
+            return (authCode == null) ? errorMessage : authMessage;
+        } else if(data != null && !data.success) {
+            if(data.banned != null && data.banned) {
+                return blockedMessage
+            } else {
+                return errorMessage
+            }
+        } else {
+            return errorMessage;
+        }
     } catch (error) {
         logger.error(error);
         return errorMessage;
@@ -86,5 +117,9 @@ rl.on('line', function (line) {
             logger.info("Stopping MinecraftCapes Auth...")
             server.close()
             process.exit();
+        case "restart":
+            logger.info("Stopping MinecraftCapes Auth...")
+            server.close()
+            startServer();
     }
 })
