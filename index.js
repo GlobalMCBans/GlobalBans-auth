@@ -42,7 +42,10 @@ function startServer() {
         motd: process.env.MOTD.replace(/&/g, '§'),
         encryption: process.env.ENCRYPTION.toLowerCase() == "true",
         'online-mode': process.env.ONLINE_MODE.toLowerCase() == "true",
-        favicon: process.env.FAVICON
+        beforePing: (response, client) => {
+            response.favicon = process.env.FAVICON;
+            response.version.protocol = client.version
+        }
     });
     logger.info("Started MinecraftCapes Auth on", process.env.SERVER_IP + ":" + process.env.SERVER_PORT);
 
