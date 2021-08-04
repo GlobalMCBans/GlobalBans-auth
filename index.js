@@ -14,6 +14,16 @@ try {
     process.exit();
 }
 
+//Load Favicon
+var serverIcon = "data:image/png;base64,";
+try {
+    if(fs.existsSync('server-icon.png')) {
+        serverIcon += fs.readFileSync('server-icon.png', 'base64')
+    }
+} catch (err) {
+    logger.error(err)
+}
+
 //STDIN Reader
 const readline = require('readline');
 var rl = readline.createInterface({
@@ -43,7 +53,9 @@ function startServer() {
         encryption: process.env.ENCRYPTION.toLowerCase() == "true",
         'online-mode': process.env.ONLINE_MODE.toLowerCase() == "true",
         beforePing: (response, client) => {
-            response.favicon = process.env.FAVICON;
+            if(serverIcon) {
+                response.favicon = serverIcon
+            }
             response.version.protocol = client.version
         }
     });
@@ -59,10 +71,9 @@ function startServer() {
         getAuthCode(client.uuid, client.username).then(res => {
             client.end(
                 "§8§l§m===============================\n\n" +
+                "§a§lMinecraftCapes\n\n" +
                 `${res}` +
-                "\n\n§8§l§m===============================\n" +
-                "\n§bJoin our Minecraft Server" +
-                "\n§a\u25A0 §ePlay.CapeCraft.Net §a\u25A0"
+                "\n\n§8§l§m===============================\n"
             );
             logger.info(client.username, "has been served")
         });
