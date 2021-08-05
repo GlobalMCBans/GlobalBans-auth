@@ -46,12 +46,12 @@ startServer();
 function startServer() {
     logger.info("Starting MinecraftCapes Auth...");
     server = mc.createServer({
-        host: process.env.SERVER_IP,
-        port: process.env.SERVER_PORT,
+        host: process.env.MCC_SERVER_IP,
+        port: process.env.MCC_SERVER_PORT,
         maxPlayers: 1,
-        motd: process.env.MOTD.replace(/&/g, '§'),
-        encryption: process.env.ENCRYPTION.toLowerCase() == "true",
-        'online-mode': process.env.ONLINE_MODE.toLowerCase() == "true",
+        motd: process.env.MCC_MOTD.replace(/&/g, '§'),
+        encryption: process.env.MCC_ENCRYPTION.toLowerCase() == "true",
+        'online-mode': process.env.MCC_ONLINE_MODE.toLowerCase() == "true",
         beforePing: (response, client) => {
             if(serverIcon) {
                 response.favicon = serverIcon
@@ -59,7 +59,7 @@ function startServer() {
             response.version.protocol = client.version
         }
     });
-    logger.info("Started MinecraftCapes Auth on", process.env.SERVER_IP + ":" + process.env.SERVER_PORT);
+    logger.info("Started MinecraftCapes Auth on", process.env.MCC_SERVER_IP + ":" + process.env.MCC_SERVER_PORT);
 
     /**
      * Handle client connections
@@ -91,11 +91,11 @@ async function getAuthCode(uuid, username) {
         let blockedMessage = "§c§lYour account has been banned for violating our terms of service."
 
         let formData = new FormData();
-        formData.append('key', process.env.API_KEY);
+        formData.append('key', process.env.MCC_API_KEY);
         formData.append('uuid', uuid.replace(/-/g, ""));
         formData.append('username', username);
 
-        let response = await fetch(process.env.AUTH_ENDPOINT, {
+        let response = await fetch(process.env.MCC_AUTH_ENDPOINT, {
             method: 'POST',
             body: formData,
             headers: formData.getHeaders()
