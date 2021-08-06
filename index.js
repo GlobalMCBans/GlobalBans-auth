@@ -38,6 +38,9 @@ const FormData = require('form-data');
 require('dotenv').config()
 const mc = require('minecraft-protocol');
 
+//Load the MOTD as well
+var serverMotd = process.env.MCC_MOTD.replace(/&/g, '§').replace(/\\u([0-9a-fA-F]{4})/g, (m,cc)=>String.fromCharCode("0x"+cc));
+
 /**
  * Start the MC Server
  */
@@ -49,7 +52,7 @@ function startServer() {
         host: process.env.MCC_SERVER_IP,
         port: process.env.MCC_SERVER_PORT,
         maxPlayers: 1,
-        motd: process.env.MCC_MOTD.replace(/&/g, '§'),
+        motd: serverMotd,
         encryption: process.env.MCC_ENCRYPTION.toLowerCase() == "true",
         'online-mode': process.env.MCC_ONLINE_MODE.toLowerCase() == "true",
         beforePing: (response, client) => {
