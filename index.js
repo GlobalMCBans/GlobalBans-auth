@@ -1,6 +1,14 @@
 //Logger first
-const logger = require("log4js").getLogger("MinecraftCapes");
-logger.level = "debug";
+const log4js = require("log4js");
+log4js.configure({
+    appenders: {
+        file: { type: "file", filename: "error.log" },
+        console: { type: "console" },
+        warnings: { type: 'logLevelFilter', appender: 'file', level: 'warn' }
+    },
+    categories: { default: { appenders: ["warnings", "console"], level: "info" } }
+});
+const logger = log4js.getLogger("MinecraftCapes");
 logger.info("Loading libraries...")
 
 //Check env
@@ -55,6 +63,7 @@ function startServer() {
         motd: serverMotd,
         encryption: process.env.MCC_ENCRYPTION.toLowerCase() == "true",
         'online-mode': process.env.MCC_ONLINE_MODE.toLowerCase() == "true",
+        hideErrors: true,
         beforePing: (response, client) => {
             if(serverIcon) {
                 response.favicon = serverIcon
@@ -98,12 +107,18 @@ async function getAuthCode(uuid, username) {
         formData.append('uuid', uuid.replace(/-/g, ""));
         formData.append('username', username);
 
-        let response = await fetch(process.env.MCC_AUTH_ENDPOINT, {
+        let data;
+        const response = await fetch(process.env.MCC_AUTH_ENDPOINT, {
             method: 'POST',
             body: formData,
             headers: formData.getHeaders()
-        });
-        let data = await response.json();
+        })
+
+        if(!response.ok) {
+            logger.error(`${uuid} Recieved an invalid ${response.status} response from MinecraftCapes!`)
+        } else {
+            data = await response.json();
+        }
 
         let authCode = null
         if(data != null && data.success) {
