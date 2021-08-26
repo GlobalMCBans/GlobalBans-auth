@@ -81,6 +81,7 @@ function startServer() {
         logger.info(client.username, "is requesting an auth code")
 
         getAuthCode(client.uuid, client.username).then(res => {
+            client.emit('end');
             client.end(
                 "§8§l§m===============================\n\n" +
                 "§a§lMinecraftCapes\n\n" +
