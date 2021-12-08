@@ -68,7 +68,7 @@ function startServer() {
             if(serverIcon) {
                 response.favicon = serverIcon
             }
-            response.version.protocol = client.version
+            response.version.protocol = client.protocolVersion
         }
     });
     logger.info("Started MinecraftCapes Auth on", process.env.MCC_SERVER_IP + ":" + process.env.MCC_SERVER_PORT);
