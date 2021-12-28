@@ -68,7 +68,7 @@ function startServer() {
             if(serverIcon) {
                 response.favicon = serverIcon
             }
-            response.version.protocol = client.version
+            response.version.protocol = client.protocolVersion
         }
     });
     logger.info("Started MinecraftCapes Auth on", process.env.MCC_SERVER_IP + ":" + process.env.MCC_SERVER_PORT);
@@ -81,6 +81,7 @@ function startServer() {
         logger.info(client.username, "is requesting an auth code")
 
         getAuthCode(client.uuid, client.username).then(res => {
+            client.emit('end');
             client.end(
                 "§8§l§m===============================\n\n" +
                 "§a§lMinecraftCapes\n\n" +
