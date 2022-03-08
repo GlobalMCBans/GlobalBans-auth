@@ -1,0 +1,50 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v1",
+        "update_url": null
+    },
+    "exported_at": "2021-08-05T12:08:03+00:00",
+    "name": "GlobalBans Auth",
+    "author": "james@fasttortoise.co.uk",
+    "description": "GlobalBans Auth Egg",
+    "features": null,
+    "images": [
+        "ghcr.io\/pterodactyl\/yolks:nodejs_16"
+    ],
+    "file_denylist": [],
+    "startup": "node \/home\/container\/index.js",
+    "config": {
+        "files": "{\r\n    \".env\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"MCC_SERVER_IP\": \"0.0.0.0\",\r\n            \"MCC_SERVER_PORT\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Started GlobalBans Auth on \"\r\n}",
+        "logs": "{}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# NodeJS Bot Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\napt update\r\napt install git -y\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server\r\nif [[ ! ${INSTALL_REPO} = *\\.git ]]; then\r\nINSTALL_REPO=$(echo -e ${INSTALL_REPO} | sed 's:\/*$::')\r\nINSTALL_REPO=\"${INSTALL_REPO}.git\"\r\nfi\r\necho -e \"working on installing from ${INSTALL_REPO}\"\r\nif [ \"$(ls -A \/mnt\/server)\" ]; then\r\necho -e \"\/mnt\/server directory is not empty.\"\r\nif [ -d .git ]; then\r\necho -e \".git directory exists\"\r\nif [ -f .git\/config ]; then\r\necho -e \"loading info from git config\"\r\nORIGIN=$(git config --get remote.origin.url)\r\nelse\r\necho -e \"files found with no git config\"\r\necho -e \"closing out without touching things to not break anything\"\r\nexit 10\r\nfi\r\nfi\r\nif [ \"${ORIGIN}\" == \"${INSTALL_REPO}\" ]; then\r\necho \"pulling latest from github\"\r\ngit reset --hard\r\ngit pull\r\nfi\r\nelse\r\necho -e \"\/mnt\/server is empty.\\ncloning files into repo\"\r\nif [ -z ${INSTALL_BRANCH} ]; then\r\necho -e \"assuming master branch\"\r\nINSTALL_BRANCH=master\r\nfi\r\necho -e \"running 'git clone --single-branch --branch ${INSTALL_BRANCH} ${INSTALL_REPO} .'\"\r\ngit clone --single-branch --branch ${INSTALL_BRANCH} ${INSTALL_REPO} .\r\nfi\r\nif [ -f \/mnt\/server\/package.json ]; then\r\n\/usr\/local\/bin\/npm ci\r\nfi\r\necho -e \"install complete\"\r\nexit 0",
+            "container": "node:16-buster-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Install Repo",
+            "description": "The github install repo",
+            "env_variable": "INSTALL_REPO",
+            "default_value": "https:\/\/github.com\/james090500\/minecraftcapes-auth.git",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:100"
+        },
+        {
+            "name": "Install Branch",
+            "description": "The branch of the repo to use",
+            "env_variable": "INSTALL_BRANCH",
+            "default_value": "node-2021",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20"
+        }
+    ]
+}
