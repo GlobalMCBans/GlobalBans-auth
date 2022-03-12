@@ -8,7 +8,7 @@ log4js.configure({
     },
     categories: { default: { appenders: ["warnings", "console"], level: "info" } }
 });
-const logger = log4js.getLogger("MinecraftCapes");
+const logger = log4js.getLogger(process.env.AUTH_SERVER_NAME);
 logger.info("Loading libraries...")
 
 //Check env
@@ -47,7 +47,7 @@ require('dotenv').config()
 const mc = require('minecraft-protocol');
 
 //Load the MOTD as well
-var serverMotd = process.env.MCC_MOTD.replace(/&/g, '§').replace(/\\u([0-9a-fA-F]{4})/g, (m,cc)=>String.fromCharCode("0x"+cc));
+var serverMotd = process.env.AUTH_SERVER_MOTD.replace(/&/g, '§').replace(/\\u([0-9a-fA-F]{4})/g, (m,cc)=>String.fromCharCode("0x"+cc));
 
 /**
  * Start the MC Server
@@ -55,14 +55,14 @@ var serverMotd = process.env.MCC_MOTD.replace(/&/g, '§').replace(/\\u([0-9a-fA-
 var server;
 startServer();
 function startServer() {
-    logger.info("Starting MinecraftCapes Auth...");
+    logger.info("Starting " + process.env.AUTH_SERVER_NAME + "...");
     server = mc.createServer({
-        host: process.env.MCC_SERVER_IP,
-        port: process.env.MCC_SERVER_PORT,
+        host: process.env.AUTH_SERVER_IP,
+        port: process.env.AUTH_SERVER_PORT,
         maxPlayers: 1,
         motd: serverMotd,
-        encryption: process.env.MCC_ENCRYPTION.toLowerCase() == "true",
-        'online-mode': process.env.MCC_ONLINE_MODE.toLowerCase() == "true",
+        encryption: process.env.AUTH_SERVER_ENCRYPTION.toLowerCase() == "true",
+        'online-mode': process.env.AUTH_SERVER_ONLINE_MODE.toLowerCase() == "true",
         hideErrors: true,
         beforePing: (response, client) => {
             if(serverIcon) {
@@ -71,7 +71,7 @@ function startServer() {
             response.version.protocol = client.protocolVersion
         }
     });
-    logger.info("Started MinecraftCapes Auth on", process.env.MCC_SERVER_IP + ":" + process.env.MCC_SERVER_PORT);
+    logger.info("Started "+ process.env.AUTH_SERVER_NAME +" Auth on", process.env.AUTH_SERVER_IP + ":" + process.env.AUTH_SERVER_PORT);
 
     /**
      * Handle client connections
@@ -84,7 +84,7 @@ function startServer() {
             client.emit('end');
             client.end(
                 "§8§l§m===============================\n\n" +
-                "§a§lMinecraftCapes\n\n" +
+                "§a§l" + process.env.AUTH_SERVER_NAME + "\n\n" +
                 `${res}` +
                 "\n\n§8§l§m===============================\n"
             );
@@ -104,19 +104,19 @@ async function getAuthCode(uuid, username) {
         let blockedMessage = "§c§lYour account has been banned for violating our terms of service."
 
         let formData = new FormData();
-        formData.append('key', process.env.MCC_API_KEY);
+        formData.append('key', process.env.AUTH_API_KEY);
         formData.append('uuid', uuid.replace(/-/g, ""));
         formData.append('username', username);
 
         let data;
-        const response = await fetch(process.env.MCC_AUTH_ENDPOINT, {
+        const response = await fetch(process.env.AUTH_API_ENDPOINT, {
             method: 'POST',
             body: formData,
             headers: formData.getHeaders()
         })
 
         if(!response.ok) {
-            logger.error(`${uuid} Recieved an invalid ${response.status} response from MinecraftCapes!`)
+            logger.error(`${uuid} Recieved an invalid ${response.status} response from ${process.env.AUTH_SERVER_NAME}!`)
         } else {
             data = await response.json();
         }
@@ -148,11 +148,11 @@ rl.on('line', function (line) {
     line = line.toLocaleLowerCase();
     switch(line) {
         case "stop":
-            logger.info("Stopping MinecraftCapes Auth...")
+            logger.info("Stopping " + process.env.AUTH_SERVER_NAME + " Auth...")
             server.close()
             process.exit();
         case "restart":
-            logger.info("Stopping MinecraftCapes Auth...")
+            logger.info("Stopping " + process.env.AUTH_SERVER_NAME + " Auth...")
             server.close()
             startServer();
     }
