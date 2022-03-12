@@ -72,6 +72,7 @@ function startServer() {
         }
     });
     logger.info("Started "+ process.env.AUTH_SERVER_NAME +" Auth on", process.env.AUTH_SERVER_IP + ":" + process.env.AUTH_SERVER_PORT);
+    logger.info("---- Server Running! ----");
 
     /**
      * Handle client connections
