@@ -12,6 +12,6 @@
     "dotenv": "^16.0.0",
     "form-data": "^4.0.0",
     "log4js": "^6.4.0",
-    "minecraft-protocol": "^1.31.0"
+    "minecraft-protocol": "^1.36.1"
   }
 }
